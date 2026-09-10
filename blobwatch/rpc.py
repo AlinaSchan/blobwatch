@@ -106,6 +106,22 @@ class Rpc:
                 out.append(block)
         return out
 
+    def receipts(self, numbers: list[int], per_request: int = 5) -> list[list[dict]]:
+        """every receipt of each block (eth_getBlockReceipts), in order, batched like blocks()."""
+        out: list[list[dict]] = []
+        for start in range(0, len(numbers), per_request):
+            chunk = numbers[start:start + per_request]
+            calls = [("eth_getBlockReceipts", [hex(n)]) for n in chunk]
+            try:
+                got = self.batch(calls)
+            except RpcUnavailable:
+                got = [self.call(*c) for c in calls]
+            for n, found in zip(chunk, got, strict=True):
+                if found is None:
+                    raise RpcUnavailable(f"no receipts for block {n} on the endpoint that answered")
+                out.append(found)
+        return out
+
     def header(self, number: int | str = "latest") -> dict:
         tag = hex(number) if isinstance(number, int) else number
         return self.call("eth_getBlockByNumber", [tag, False])

@@ -96,6 +96,10 @@ class FakeRpc:
     def blocks(self, numbers, full=True, per_request=5):
         return [self.by_number[n] for n in numbers]
 
+    def receipts(self, numbers, per_request=5):
+        return [[{"transactionHash": t["hash"], "type": t["type"], "gasUsed": hex(50_000), "effectiveGasPrice": hex(2 * 10**9)}
+                 for t in self.by_number[n]["transactions"]] for n in numbers]
+
     def block_number(self):
         return max(self.by_number) + 1
 
@@ -159,6 +163,32 @@ def test_scan_prices_and_groups():
     base = found[0]
     assert base.paid == 6 * GAS_PER_BLOB * 56_080_378 + 6 * GAS_PER_BLOB * 1
     assert names[txs[0].hash] == "base" and len(names) == 6
+
+
+def test_receipts_add_the_execution_side():
+    _, txs = scan(FakeRpc(BLOCKS), [100, 101, 102], list(KNOWN), workers=2, per_request=2, receipts=True)
+    assert len(txs) == 6 and all(t.exec_paid == 50_000 * 2 * 10**9 for t in txs)  # the type 2 transaction is not counted
+    found, _ = group(txs, Namer(FakeRpc()))
+    assert found[0].name == "base" and found[0].exec_paid == 2 * 50_000 * 2 * 10**9
+    _, plain = scan(FakeRpc(BLOCKS), [100], list(KNOWN))
+    assert all(t.exec_paid is None for t in plain)
+
+
+def test_cli_with_receipts(monkeypatch, capsys, tmp_path):
+    monkeypatch.setattr(cli, "Rpc", lambda urls=None: FakeRpc(BLOCKS))
+    monkeypatch.setattr(cli, "eth_usd", lambda: 4000.0)
+    path = tmp_path / "txs.csv"
+    assert cli.main(["--blocks", "3", "--receipts", "--csv", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "blob eth   exec eth" in out and "for the execution gas of the same transactions: 0.000600 eth" in out and "together" in out
+    with open(path, encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert rows[0]["exec_paid_wei"] == str(50_000 * 2 * 10**9)
+    assert cli.main(["--blocks", "3", "--receipts", "--json"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["exec_paid_wei"] == 6 * 50_000 * 2 * 10**9 and doc["posters"][0]["exec_paid_wei"] == 2 * 50_000 * 2 * 10**9
+    assert cli.main(["--blocks", "3", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out)["exec_paid_wei"] is None
 
 
 def test_first_block_since_bisects_timestamps():

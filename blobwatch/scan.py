@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from .blobs import GAS_PER_BLOB, Schedule, blob_base_fee, schedule_at
 
@@ -27,10 +27,11 @@ class BlobTx:
     blobs: int
     fee: int  # wei per blob gas, the block's blob base fee
     head: str  # the first 36 bytes of the calldata: a selector and one word
+    exec_paid: int | None = None  # wei for the ordinary gas of the same transaction, with --receipts
 
     @property
     def paid(self) -> int:
-        """wei burned for the blob space. the execution gas of the same transaction is not in it."""
+        """wei burned for the blob space. the execution gas of the same transaction is exec_paid."""
         return self.blobs * GAS_PER_BLOB * self.fee
 
 
@@ -50,12 +51,26 @@ def read_block(raw: dict, schedules) -> tuple[Block, list[BlobTx]]:
     return Block(number, ts, used // GAS_PER_BLOB, excess, fee, schedule), txs
 
 
-def scan(rpc, numbers: list[int], schedules, workers: int = 4, per_request: int = 5) -> tuple[list[Block], list[BlobTx]]:
-    """a full block is about half a megabyte, so each worker reads its few blocks and keeps only the blob part."""
+def exec_costs(receipts: list[dict]) -> dict[str, int]:
+    """tx hash -> gas used x effective gas price (base fee and tip) for the blob transactions of one block."""
+    return {r["transactionHash"]: int(r["gasUsed"], 16) * int(r["effectiveGasPrice"], 16)
+            for r in receipts or [] if r.get("type") == "0x3"}
+
+
+def scan(rpc, numbers: list[int], schedules, workers: int = 4, per_request: int = 5,
+         receipts: bool = False) -> tuple[list[Block], list[BlobTx]]:
+    """a full block is about half a megabyte, so each worker reads its few blocks and keeps only the blob part.
+    with `receipts` it reads every receipt of the same blocks as well, about as much data again."""
     chunks = [numbers[i:i + per_request] for i in range(0, len(numbers), per_request)]
 
     def work(chunk):
-        return [read_block(raw, schedules) for raw in rpc.blocks(chunk, full=True, per_request=per_request)]
+        parts = [read_block(raw, schedules) for raw in rpc.blocks(chunk, full=True, per_request=per_request)]
+        if receipts:
+            costs: dict[str, int] = {}
+            for found in rpc.receipts(chunk, per_request=per_request):
+                costs.update(exec_costs(found))
+            parts = [(block, [replace(t, exec_paid=costs.get(t.hash)) for t in txs]) for block, txs in parts]
+        return parts
 
     blocks: list[Block] = []
     txs: list[BlobTx] = []
@@ -77,6 +92,7 @@ class Poster:
     blobs: int = 0
     txs: int = 0
     paid: int = 0
+    exec_paid: int = 0
 
 
 def group(txs: list[BlobTx], namer) -> tuple[list[Poster], dict[str, str]]:
@@ -92,6 +108,7 @@ def group(txs: list[BlobTx], namer) -> tuple[list[Poster], dict[str, str]]:
         p.blobs += tx.blobs
         p.txs += 1
         p.paid += tx.paid
+        p.exec_paid += tx.exec_paid or 0
     return sorted(posters.values(), key=lambda p: (-p.blobs, p.name)), names
 
 

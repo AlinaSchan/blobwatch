@@ -58,6 +58,7 @@ or clone it and run `python -m blobwatch` from the folder. python 3.10 or newer,
 blobwatch                          # the last 50 blocks, about ten minutes
 blobwatch --since 1h               # 300 blocks: about a minute and a half on a public node
 blobwatch --to-block 25900000      # a window that ends somewhere in the past
+blobwatch --receipts               # the execution gas of the same transactions too (twice the data)
 blobwatch --json                   # every poster with its inboxes, senders and the source of its name
 blobwatch --csv blobs.csv          # one row per blob transaction
 blobwatch --labels mine.json       # {"0xinbox": "my rollup"} on top of the built-in names
@@ -78,7 +79,9 @@ blobwatch --no-resolve --no-usd    # no extra eth_call, no price lookup
   from [eip-4844](https://eips.ethereum.org/EIPS/eip-4844), in integers, exactly as clients
   compute it; the live test checks it against `blobGasPrice` in a real receipt. a transaction
   pays blobs x 131,072 x that fee. there are no tips on blob gas, so this is what was burned for
-  the space; the execution gas of the same transaction is not in the number.
+  the space. the same transaction also pays ordinary gas for its calldata and the inbox's work;
+  `--receipts` reads every receipt of the window (`eth_getBlockReceipts`) and adds gas used x
+  effective gas price, base fee and tip, as a second column.
 - **who posted it.** a blob transaction is sent to an inbox. in this order:
   1. your `--labels` file;
   2. a zk stack commit (`commitBatchesSharedBridge`) names the chain's diamond contract as its

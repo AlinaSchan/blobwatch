@@ -3,6 +3,11 @@
 all notable changes to blobwatch. the format follows [keep a changelog](https://keepachangelog.com/en/1.1.0/),
 versions follow [semver](https://semver.org/) as far as a command line tool has an api.
 
+## [unreleased]
+
+- `--receipts`: the execution gas of the same transactions (gas used x effective gas price, from
+  `eth_getBlockReceipts`) next to the blob fee, in the table, the json and the csv
+
 ## [0.1.0] - 2026-09-10
 
 first cut: the blob transactions of the last blocks, priced and grouped by who posted them.

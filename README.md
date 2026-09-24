@@ -1,10 +1,10 @@
 # blobwatch
 
-[![ci](https://github.com/alinaschanz/blobwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/alinaschanz/blobwatch/actions/workflows/ci.yml)
+[![ci](https://github.com/AlinaSchan/blobwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/AlinaSchan/blobwatch/actions/workflows/ci.yml)
 ![python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)
 ![license mit](https://img.shields.io/badge/license-MIT-2b7a74)
-[![release](https://img.shields.io/github/v/release/alinaschanz/blobwatch?color=2b7a74)](https://github.com/alinaschanz/blobwatch/releases)
-[![openssf scorecard](https://api.scorecard.dev/projects/github.com/alinaschanz/blobwatch/badge)](https://scorecard.dev/viewer/?uri=github.com/alinaschanz/blobwatch)
+[![release](https://img.shields.io/github/v/release/AlinaSchan/blobwatch?color=2b7a74)](https://github.com/AlinaSchan/blobwatch/releases)
+[![openssf scorecard](https://api.scorecard.dev/projects/github.com/AlinaSchan/blobwatch/badge)](https://scorecard.dev/viewer/?uri=github.com/AlinaSchan/blobwatch)
 
 who bought ethereum's blob space in the last ten minutes, and what they paid for it. every blob
 transaction of the last blocks, priced from the block header and grouped by the rollup that
@@ -47,7 +47,7 @@ three dollars: blobs are 62% of the target, so the price sits near its floor.
 ## install
 
 ```
-pipx install git+https://github.com/alinaschanz/blobwatch
+pipx install git+https://github.com/AlinaSchan/blobwatch
 ```
 
 or clone it and run `python -m blobwatch` from the folder. python 3.10 or newer, no dependencies.
@@ -117,9 +117,9 @@ still needs a name.
 
 ## see also
 
-- [gasweek](https://github.com/alinaschanz/gasweek): the execution side, base fee by hour of day
-- [rpcprobe](https://github.com/alinaschanz/rpcprobe): which public endpoints answer, and what they let you do
-- [onchain-notes](https://github.com/alinaschanz/onchain-notes): the blob fee on the daily card
+- [gasweek](https://github.com/AlinaSchan/gasweek): the execution side, base fee by hour of day
+- [rpcprobe](https://github.com/AlinaSchan/rpcprobe): which public endpoints answer, and what they let you do
+- [onchain-notes](https://github.com/AlinaSchan/onchain-notes): the blob fee on the daily card
 - the notes: [alinaschanz.life](https://alinaschanz.life), the short version on [x](https://x.com/alinaschanz)
 
 ## verify a release
@@ -129,7 +129,7 @@ file, and a build provenance attestation made in github's own signing flow. with
 into one folder:
 
     sha256sum -c SHA256SUMS
-    gh attestation verify ./*.whl --owner alinaschanz
+    gh attestation verify ./*.whl --owner AlinaSchan
     ots verify SHA256SUMS.ots
 
 the commit itself is [signed](https://alinaschanz.life/verify/#commits).

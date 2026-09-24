@@ -13,7 +13,7 @@ DEFAULT_RPCS = (
     "https://gateway.tenderly.co/public/mainnet",
     "https://eth-mainnet.public.blastapi.io",
 )
-USER_AGENT = "blobwatch/0.1 (+https://github.com/alinaschanz/blobwatch)"
+USER_AGENT = "blobwatch/0.1 (+https://github.com/AlinaSchan/blobwatch)"
 
 
 class RpcError(Exception):

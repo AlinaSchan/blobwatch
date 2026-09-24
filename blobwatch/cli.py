@@ -16,7 +16,7 @@ from .posters import Namer, load_labels
 from .rpc import Rpc, RpcError, RpcUnavailable
 from .scan import first_block_since, group, scan
 
-USER_AGENT = "blobwatch/0.1 (+https://github.com/alinaschanz/blobwatch)"
+USER_AGENT = "blobwatch/0.1 (+https://github.com/AlinaSchan/blobwatch)"
 CSV_FIELDS = ("block", "time_utc", "tx", "from", "to", "poster", "blobs", "blob_base_fee_wei", "paid_wei", "exec_paid_wei")
 ORIGINS = (("table", "from the table"), ("chain", "read from the chain"), ("labels", "from your file"), ("unlabeled", "unlabeled"))
 
